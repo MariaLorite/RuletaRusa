@@ -8,8 +8,4 @@ public class Player
     public string name;
     public bool alive = true;
 
-    public void rollDice()
-    {
-
-    }
 }

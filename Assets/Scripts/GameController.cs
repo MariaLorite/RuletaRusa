@@ -2,41 +2,56 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using TMPro;
+using UnityEngine.UI;
 
 public class GameController : MonoBehaviour
 {
     List<Player> players;
-    public List<string> playersName;
+    public List<string> PlayersName;
     bool someoneDead = false;
     int turnPlayer = 0;
     bool defaultPlayers = true;
-    
-    // Start is called before the first frame update
+    int bullet = 0;
+    SpriteRenderer ImagenUI;
+
+    public TextMeshProUGUI UITurnoText;
+    public TextMeshProUGUI UIMenssageText;
+    public TextMeshProUGUI UINameText;
+
+    GunScript gunScript;
+
+    private void Awake()
+    {
+        ImagenUI = FindObjectOfType<SpriteRenderer>();
+        gunScript = FindObjectOfType<GunScript>();
+    }
     void Start()
     {
         players = new List<Player>();
+        ImagenUI.gameObject.SetActive(false);
         CreateDefaultPlayers();
         //ListPlayersName();
+        bullet = AssignBullet();
+        turnPlayer = Random.Range(0, players.Count);
+        UITurnoText.text = "Turno jugador " + (turnPlayer + 1) + " " + players[turnPlayer].name;
+        UIMenssageText.text = "El juego comienza con el turno del jugador " + (turnPlayer + 1) + " " + players[turnPlayer].name;
+        UINameText.text = players[turnPlayer].name;
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        looseGame();
-        if (someoneDead == true)
-        {
-            Debug.LogError("El jugador " + (turnPlayer+1) + " " + players[turnPlayer].name + " ha perdido");
-            SceneManager.LoadScene(0);
-        }
-    }
-
-    public void looseGame()
+    public void LooseGame()
     {
         for (int i = 0; i < players.Count; i++)
         {
             if (players[i].alive == false)
             {
                 someoneDead = true;
+                UIMenssageText.text = "El jugador " + (turnPlayer + 1) + " " + players[turnPlayer].name + " ha perdido";
+                UINameText.text = players[turnPlayer].name;
+                UINameText.color = Color.red;
+                ImagenUI.gameObject.SetActive(true);
+ 
+                Invoke("ResetGame", 2.0f);
                 break;
             }
         }
@@ -44,19 +59,16 @@ public class GameController : MonoBehaviour
 
     public void CreateDefaultPlayers()
     {
-        if (playersName.Count != 0)
+        if (PlayersName.Count != 0)
         {
-            for (int i = 0; i < playersName.Count; i++)
+            for (int i = 0; i < PlayersName.Count; i++)
             {
-                var _player = new Player();
-                _player.name = playersName[i];
-                _player.id = i;
-                players.Add(_player);
+                CreateInternPlayer(i, PlayersName[i]);
             }
         }
         else
         {
-            Debug.LogError("No hay ningun jugador");
+            UIMenssageText.text = "No hay ningun jugador";
         }
     }
 
@@ -71,14 +83,54 @@ public class GameController : MonoBehaviour
             }
         }
     }
+    public void StopAnim()
+    {
+        gunScript.GunAnim(false);
+    }
 
     public void ShootPlayer()
     {
-        int bullet = 0;
+        gunScript.GunAnim(true);
+        Invoke("StopAnim", 0.6f);
+
+        if (turnPlayer == bullet)
+        {
+            LooseGame();
+        }
+        else
+        {
+            if (turnPlayer == players.Count)
+            {
+                turnPlayer = 0;
+                UIMenssageText.text = "Jugador " + (turnPlayer + 1) + " no es tu día de muerte";
+                UITurnoText.text = "Turno jugador " + (turnPlayer + 1) + " " + players[turnPlayer].name;
+                UINameText.text = players[turnPlayer].name;
+            }
+            else
+            {
+                UIMenssageText.text = players[turnPlayer].name + " no es tu día de muerte";
+
+                turnPlayer++;
+                if (turnPlayer == players.Count)
+                {
+                    turnPlayer = 0;
+                    UITurnoText.text = "turno jugador " + (turnPlayer + 1) + " " + players[turnPlayer].name;
+                    UINameText.text = players[turnPlayer].name;
+                } else
+                {
+                    UITurnoText.text = "Turno jugador " + (turnPlayer + 1) + " " + players[turnPlayer].name;
+                    UINameText.text = players[turnPlayer].name;
+                }
+            }
+        }   
+    }
+
+    public int AssignBullet()
+    {  
         bullet = Random.Range(0, players.Count);
         players[bullet].alive = false;
-        turnPlayer = bullet;
-        Debug.Log("La bala le ha tocado al jugador " + (bullet+1));
+        Debug.Log("La bala le ha tocado al jugador " + (bullet + 1));
+        return bullet;
     }
 
     public void ReadPlayerName(string name)
@@ -89,9 +141,19 @@ public class GameController : MonoBehaviour
             players = new List<Player>();
         }
         defaultPlayers = false;
+        CreateInternPlayer(players.Count, name);
+    }
+
+    public void CreateInternPlayer(int id, string name)
+    {
         var _player = new Player();
         _player.name = name;
-        _player.id = players.Count;
+        _player.id = id;
         players.Add(_player);
+    }
+
+    void ResetGame()
+    {
+        SceneManager.LoadScene(0);
     }
 }
