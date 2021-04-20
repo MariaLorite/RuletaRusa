@@ -53,7 +53,7 @@ public class GameController : MonoBehaviour
  
                 Invoke("ResetGame", 2.0f);
                 break;
-            }
+            } 
         }
     }
 
@@ -114,7 +114,7 @@ public class GameController : MonoBehaviour
                 if (turnPlayer == players.Count)
                 {
                     turnPlayer = 0;
-                    UITurnoText.text = "turno jugador " + (turnPlayer + 1) + " " + players[turnPlayer].name;
+                    UITurnoText.text = "Turno jugador " + (turnPlayer + 1) + " " + players[turnPlayer].name;
                     UINameText.text = players[turnPlayer].name;
                 } else
                 {
@@ -142,6 +142,7 @@ public class GameController : MonoBehaviour
         }
         defaultPlayers = false;
         CreateInternPlayer(players.Count, name);
+        bullet = AssignBullet();
     }
 
     public void CreateInternPlayer(int id, string name)
